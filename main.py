@@ -1,4 +1,5 @@
-from transformers import pipeline
+from transformers import pipeline, AutoTokenizer, AutoModel, AutoModelForSequenceClassification
+import torch
 
 # classifier = pipeline("zero-shot-classification")
 # classifier_result = classifier(
@@ -37,7 +38,26 @@ from transformers import pipeline
 # translator = pipeline("translation", model="Helsinki-NLP/opus-mt-en-tw")
 # translated_text = translator("My name is Kofi. I am 8 years old")
 
-translator = pipeline("translation", model="facebook/nllb-200-distilled-600M")
-translated_text = translator("My name is Kofi. I am 8 years old", src_lang="eng_Latn", tgt_lang="ewe_Latn")
+# translator = pipeline("translation", model="facebook/nllb-200-distilled-600M")
+# translated_text = translator("My name is Kofi. I am 8 years old", src_lang="eng_Latn", tgt_lang="ewe_Latn")
+#
+# print(f"The translated text is: {translated_text}")
 
-print(f"The translated text is: {translated_text}")
+checkpoint = "distilbert/distilroberta-base"
+tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
+
+raw_inputs = [
+    "I've been waiting for a HuggingFace course my whole life.",
+    "I hate this so much!",
+]
+inputs = tokenizer(raw_inputs, padding=True, truncation=True, return_tensors="pt")
+print(inputs)
+
+outputs = model(**inputs)
+print(outputs.logits.shape)
+print(outputs.logits)
+
+predictions = torch.nn.functional.softmax(outputs.logits, dim=-1)
+print(predictions)
+print(model.config.id2label)
